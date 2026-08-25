@@ -480,10 +480,22 @@ monthSelect.addEventListener('change', (e) => {
 loadMonth();
 
 if ('serviceWorker' in navigator) {
+  let refreshed = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshed) return;
+    refreshed = true;
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+      reg.update();
+      setInterval(() => reg.update(), 60 * 1000);
+    }).catch(() => {});
   });
 }
+
 </script>
 
 </body>
