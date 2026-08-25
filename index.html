@@ -314,7 +314,7 @@ MONTHS.forEach((m, i) => {
 monthSelect.value = monthIndex;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
-function emptyRow() { return { id: uid(), date: "", desc: "", expense: "", income: "" }; }
+function emptyRow() { return { id: uid(), day: "", desc: "", expense: "", income: "" }; }
 function emptyRows() { return [emptyRow(), emptyRow(), emptyRow(), emptyRow(), emptyRow()]; }
 function toNumber(v) {
   const n = parseFloat(String(v).replace(/,/g, ""));
@@ -387,16 +387,24 @@ function render() {
     const rowEl = document.createElement('div');
     rowEl.className = 'row';
     rowEl.innerHTML = `
-      <div class="cell"><input class="date-input" placeholder="MM/DD" value="${escapeHtml(r.date)}" /></div>
-      <div class="cell"><input class="desc-input" placeholder="내용을 입력하세요" value="${escapeHtml(r.desc)}" /></div>
+      <div class="cell">
+        <div style="display:flex;align-items:center;gap:2px;">
+          <span style="color:var(--ink-soft);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;">${String(monthIndex + 1).padStart(2, "0")}/</span>
+          <input class="day-input" maxlength="2" placeholder="" style="width:26px;" value="${escapeHtml(r.day)}" />
+        </div>
+      </div>
+      <div class="cell"><input class="desc-input" placeholder="" value="${escapeHtml(r.desc)}" /></div>
       <div class="cell"><input class="num expense-input" placeholder="0" style="color: var(--expense-text);" value="${r.expense ? formatWon(toNumber(r.expense)) : ''}" /></div>
       <div class="cell"><input class="num income-input" placeholder="0" style="color: var(--income-text);" value="${r.income ? formatWon(toNumber(r.income)) : ''}" /></div>
       <div class="cell"><span class="balance-val">${formatWon(running)}</span></div>
       <div class="cell"><button class="del-btn" aria-label="행 삭제">✕</button></div>
     `;
 
-    rowEl.querySelector('.date-input').addEventListener('input', (e) => {
-      r.date = e.target.value; scheduleSave();
+    rowEl.querySelector('.day-input').addEventListener('input', (e) => {
+      const digits = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+      r.day = digits;
+      e.target.value = digits;
+      scheduleSave();
     });
     rowEl.querySelector('.desc-input').addEventListener('input', (e) => {
       r.desc = e.target.value; scheduleSave();
