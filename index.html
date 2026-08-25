@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Savings Account</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#E3D9F5" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="S-A" />
+<style>
+  :root {
+    --ink: #2E2B3D;
+    --ink-soft: #6B6779;
+    --line: #E7E2D6;
+    --date: #E3D9F5;
+    --date-text: #5A4A8C;
+    --desc: #D6EAF3;
+    --desc-text: #2E6580;
+    --expense: #F7D9CC;
+    --expense-text: #A6431C;
+    --income: #D7EFE0;
+    --income-text: #2C7A54;
+    --balance: #F2E8CE;
+    --balance-text: #8A6A17;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px;
+    background: #F4F1EC;
+    font-family: 'Helvetica Neue', Arial, 'Apple SD Gothic Neo', sans-serif;
+    color: var(--ink);
+  }
+  .card {
+    background: #fff;
+    max-width: 760px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .stub {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 10px 0 0;
+  }
+  .stub span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+  .header {
+    padding: 20px 28px 16px;
+  }
+  .title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 0;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex;
+    gap: 0.3em;
+  }
+  h1 .thin { font-weight: 300; color: var(--ink-soft); }
+  h1 .bold { font-weight: 700; }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    min-width: 54px;
+    text-align: right;
+  }
+  .status.error { color: var(--expense-text); }
+  .month-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  select {
+    border: none;
+    border-bottom: 1px solid var(--ink);
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 2px 4px;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .summary-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .summary-card.start {
+    border: 1px solid var(--line);
+  }
+  .summary-card .label {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    opacity: 0.75;
+    margin-bottom: 4px;
+  }
+  .summary-card .value {
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-card input {
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+    font-family: inherit;
+    padding: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    padding: 0 28px;
+  }
+  .table-wrap { padding: 0 28px; }
+  .thead-row {
+    display: grid;
+    grid-template-columns: 78px 1fr 100px 100px 110px 34px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .thead-row div {
+    padding: 10px 10px;
+    text-align: center;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 78px 1fr 100px 100px 110px 34px;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+  }
+  .row .cell { padding: 6px 8px; }
+  .row input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    padding: 6px 2px;
+    font-family: inherit;
+  }
+  .row input.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .row .balance-val {
+    display: block;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--balance-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .del-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: center;
+    padding: 4px;
+    width: 100%;
+  }
+  .del-btn:hover { color: var(--expense-text); }
+  .add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0 20px;
+    border: 1px dashed var(--ink-soft);
+    background: transparent;
+    color: var(--ink-soft);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .add-row-btn:hover { background: #FAF9F6; }
+  .footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--ink);
+  }
+  .footer div {
+    padding: 12px 28px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .footer .start-bal { background: var(--date); color: var(--date-text); }
+  .footer .end-bal { background: var(--balance); color: var(--balance-text); text-align: right; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="stub" id="stub"></div>
+
+  <div class="header">
+    <div class="title-row">
+      <h1><span class="bold">SAVINGS</span><span class="thin">ACCOUNT</span></h1>
+      <div class="controls">
+        <span class="status" id="status"></span>
+        <span class="month-label">Month</span>
+        <select id="yearSelect"></select>
+        <select id="monthSelect"></select>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card start">
+        <div class="label">시작 잔액</div>
+        <input id="startBalance" inputmode="numeric" value="0" />
+      </div>
+      <div class="summary-card" style="background: var(--expense);">
+        <div class="label" style="color: var(--expense-text);">총 지출</div>
+        <div class="value" id="totalExpense" style="color: var(--expense-text);">0원</div>
+      </div>
+      <div class="summary-card" style="background: var(--balance);">
+        <div class="label" style="color: var(--balance-text);">최종 잔액</div>
+        <div class="value" id="endBalance" style="color: var(--balance-text);">0원</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="thead-row">
+      <div style="background: var(--date); color: var(--date-text);">날짜</div>
+      <div style="background: var(--desc); color: var(--desc-text);">내용</div>
+      <div style="background: var(--expense); color: var(--expense-text);">지출</div>
+      <div style="background: var(--income); color: var(--income-text);">수입</div>
+      <div style="background: var(--balance); color: var(--balance-text);">잔액</div>
+      <div></div>
+    </div>
+    <div id="rows"></div>
+    <button class="add-row-btn" id="addRowBtn">+ 항목 추가</button>
+  </div>
+
+  <div class="footer">
+    <div class="start-bal">시작 잔액&nbsp;&nbsp;<span id="footStart">0원</span></div>
+    <div class="end-bal">최종 잔액&nbsp;&nbsp;<span id="footEnd">0원</span></div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+const now = new Date();
+let year = 2026;
+let monthIndex = now.getMonth();
+let rows = [];
+let startBalanceRaw = "0";
+let saveTimer = null;
+
+const stub = document.getElementById('stub');
+for (let i = 0; i < 26; i++) {
+  const s = document.createElement('span');
+  stub.appendChild(s);
+}
+
+const yearSelect = document.getElementById('yearSelect');
+for (let i = 0; i < 7; i++) {
+  const y = 2026 + i;
+  const opt = document.createElement('option');
+  opt.value = y; opt.textContent = y;
+  yearSelect.appendChild(opt);
+}
+yearSelect.value = year;
+
+const monthSelect = document.getElementById('monthSelect');
+MONTHS.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = m;
+  monthSelect.appendChild(opt);
+});
+monthSelect.value = monthIndex;
+
+function uid() { return Math.random().toString(36).slice(2, 9); }
+function emptyRow() { return { id: uid(), date: "", desc: "", expense: "", income: "" }; }
+function emptyRows() { return [emptyRow(), emptyRow(), emptyRow(), emptyRow(), emptyRow()]; }
+function toNumber(v) {
+  const n = parseFloat(String(v).replace(/,/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+function formatWon(n) {
+  if (!n) return "0";
+  return Math.round(n).toLocaleString("ko-KR");
+}
+function storageKey(y, m) {
+  return `ledger:${y}-${String(m + 1).padStart(2, "0")}`;
+}
+
+function setStatus(text, isError) {
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.classList.toggle('error', !!isError);
+}
+
+function loadMonth() {
+  setStatus('불러오는 중…');
+  const key = storageKey(year, monthIndex);
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      startBalanceRaw = parsed.startBalance || "0";
+      rows = (parsed.rows && parsed.rows.length) ? parsed.rows : emptyRows();
+    } else {
+      startBalanceRaw = "0";
+      rows = emptyRows();
+    }
+    setStatus('');
+  } catch (e) {
+    startBalanceRaw = "0";
+    rows = emptyRows();
+    setStatus('불러오기 실패', true);
+  }
+  render();
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  setStatus('저장 중…');
+  saveTimer = setTimeout(() => {
+    const key = storageKey(year, monthIndex);
+    try {
+      localStorage.setItem(key, JSON.stringify({ startBalance: startBalanceRaw, rows }));
+      setStatus('저장됨');
+    } catch (e) {
+      setStatus('저장 실패', true);
+    }
+  }, 400);
+}
+
+function render() {
+  document.getElementById('startBalance').value = formatWon(toNumber(startBalanceRaw));
+
+  const rowsContainer = document.getElementById('rows');
+  rowsContainer.innerHTML = '';
+
+  let running = toNumber(startBalanceRaw);
+  let totalExpense = 0, totalIncome = 0;
+
+  rows.forEach((r) => {
+    running = running - toNumber(r.expense) + toNumber(r.income);
+    totalExpense += toNumber(r.expense);
+    totalIncome += toNumber(r.income);
+
+    const rowEl = document.createElement('div');
+    rowEl.className = 'row';
+    rowEl.innerHTML = `
+      <div class="cell"><input class="date-input" placeholder="MM/DD" value="${escapeHtml(r.date)}" /></div>
+      <div class="cell"><input class="desc-input" placeholder="내용을 입력하세요" value="${escapeHtml(r.desc)}" /></div>
+      <div class="cell"><input class="num expense-input" placeholder="0" style="color: var(--expense-text);" value="${r.expense ? formatWon(toNumber(r.expense)) : ''}" /></div>
+      <div class="cell"><input class="num income-input" placeholder="0" style="color: var(--income-text);" value="${r.income ? formatWon(toNumber(r.income)) : ''}" /></div>
+      <div class="cell"><span class="balance-val">${formatWon(running)}</span></div>
+      <div class="cell"><button class="del-btn" aria-label="행 삭제">✕</button></div>
+    `;
+
+    rowEl.querySelector('.date-input').addEventListener('input', (e) => {
+      r.date = e.target.value; scheduleSave();
+    });
+    rowEl.querySelector('.desc-input').addEventListener('input', (e) => {
+      r.desc = e.target.value; scheduleSave();
+    });
+    rowEl.querySelector('.expense-input').addEventListener('input', (e) => {
+      const digits = e.target.value.replace(/[^0-9]/g, "");
+      r.expense = digits;
+      e.target.value = digits ? formatWon(toNumber(digits)) : '';
+      placeCaretAtEnd(e.target);
+      render();
+      scheduleSave();
+    });
+    rowEl.querySelector('.income-input').addEventListener('input', (e) => {
+      const digits = e.target.value.replace(/[^0-9]/g, "");
+      r.income = digits;
+      e.target.value = digits ? formatWon(toNumber(digits)) : '';
+      placeCaretAtEnd(e.target);
+      render();
+      scheduleSave();
+    });
+    rowEl.querySelector('.del-btn').addEventListener('click', () => {
+      rows = rows.filter((row) => row.id !== r.id);
+      render();
+      scheduleSave();
+    });
+
+    rowsContainer.appendChild(rowEl);
+  });
+
+  const endBalance = running;
+  document.getElementById('totalExpense').textContent = formatWon(totalExpense) + '원';
+  document.getElementById('endBalance').textContent = formatWon(endBalance) + '원';
+  document.getElementById('footStart').textContent = formatWon(toNumber(startBalanceRaw)) + '원';
+  document.getElementById('footEnd').textContent = formatWon(endBalance) + '원';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function placeCaretAtEnd(el) {
+  const val = el.value;
+  el.value = '';
+  el.value = val;
+}
+
+document.getElementById('startBalance').addEventListener('input', (e) => {
+  const digits = e.target.value.replace(/[^0-9]/g, "");
+  startBalanceRaw = digits;
+  e.target.value = digits ? formatWon(toNumber(digits)) : '';
+  placeCaretAtEnd(e.target);
+  render();
+  scheduleSave();
+});
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  rows.push(emptyRow());
+  render();
+  scheduleSave();
+});
+
+yearSelect.addEventListener('change', (e) => {
+  year = parseInt(e.target.value, 10);
+  loadMonth();
+});
+monthSelect.addEventListener('change', (e) => {
+  monthIndex = parseInt(e.target.value, 10);
+  loadMonth();
+});
+
+loadMonth();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
